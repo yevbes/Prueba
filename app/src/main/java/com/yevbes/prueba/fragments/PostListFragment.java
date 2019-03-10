@@ -24,7 +24,6 @@ import com.yevbes.prueba.utils.NetworkStatusChecker;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.observers.DisposableObserver;
@@ -37,7 +36,6 @@ public class PostListFragment extends Fragment {
 
 
     private PostAdapter mAdapter;
-    private RecyclerView recyclerView;
     private SwipeRefreshLayout swipeRefreshLayout;
     private DataManager dataManager;
     private CoordinatorLayout coordinatorLayout;
@@ -82,7 +80,7 @@ public class PostListFragment extends Fragment {
             LinearLayoutManager llm = new LinearLayoutManager(getContext());
             llm.setOrientation(LinearLayoutManager.VERTICAL);
 
-            recyclerView = view.findViewById(R.id.postRecyclerView);
+            RecyclerView recyclerView = view.findViewById(R.id.postRecyclerView);
             recyclerView.setAdapter(mAdapter);
             recyclerView.setLayoutManager(llm);
 
@@ -99,10 +97,11 @@ public class PostListFragment extends Fragment {
                 }
             });
 
-            swipeRefreshLayout.setColorScheme(android.R.color.holo_blue_bright,
+            int[] colors = {android.R.color.holo_blue_bright,
                     android.R.color.holo_green_light,
                     android.R.color.holo_orange_light,
-                    android.R.color.holo_red_light);
+                    android.R.color.holo_red_light};
+            swipeRefreshLayout.setColorSchemeColors(colors);
         }
         getPosts();
     }
