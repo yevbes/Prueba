@@ -26,6 +26,7 @@ import java.util.List;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
 
@@ -40,6 +41,7 @@ public class PostListFragment extends Fragment {
     private SwipeRefreshLayout swipeRefreshLayout;
     private DataManager dataManager;
     private CoordinatorLayout coordinatorLayout;
+    private CompositeDisposable disposable;
 
 
     private List<PostModelRes> postModelResList;
@@ -55,11 +57,13 @@ public class PostListFragment extends Fragment {
         dataManager = DataManager.getInstance();
         postModelResList = new ArrayList<>();
         mAdapter = new PostAdapter(postModelResList);
+        disposable = new CompositeDisposable();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        disposable.dispose();
     }
 
     @Override
@@ -130,26 +134,28 @@ public class PostListFragment extends Fragment {
                 }
             });*/
 
-            final Observable<List<PostModelRes>> call = dataManager.getPostsList();
-            call.subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribeWith(new DisposableObserver<List<PostModelRes>>() {
-                        @Override
-                        public void onNext(List<PostModelRes> postModelRes) {
-                            postModelResList = postModelRes;
-                            mAdapter.updateRowItems(postModelResList);
-                        }
+            disposable.add(
+                    dataManager.getPostsList().subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribeWith(new DisposableObserver<List<PostModelRes>>() {
+                                @Override
+                                public void onNext(List<PostModelRes> postModelRes) {
+                                    postModelResList = postModelRes;
+                                    mAdapter.updateRowItems(postModelResList);
+                                }
 
-                        @Override
-                        public void onError(Throwable e) {
-                            swipeRefreshLayout.setRefreshing(false);
-                        }
+                                @Override
+                                public void onError(Throwable e) {
+                                    swipeRefreshLayout.setRefreshing(false);
+                                }
 
-                        @Override
-                        public void onComplete() {
-                            swipeRefreshLayout.setRefreshing(false);
-                        }
-                    });
+                                @Override
+                                public void onComplete() {
+                                    swipeRefreshLayout.setRefreshing(false);
+                                    disposable.delete(this);
+                                }
+                            })
+            );
         } else {
             Snackbar snackbar = Snackbar.make(coordinatorLayout, "Check for internet connection!", Snackbar.LENGTH_LONG);
             snackbar.show();
