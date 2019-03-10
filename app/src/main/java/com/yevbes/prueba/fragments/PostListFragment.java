@@ -14,10 +14,12 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.yevbes.prueba.R;
 import com.yevbes.prueba.managers.DataManager;
 import com.yevbes.prueba.model.res.PostModelRes;
+import com.yevbes.prueba.ui.adapters.OnAdapterItemClick;
 import com.yevbes.prueba.ui.adapters.PostAdapter;
 import com.yevbes.prueba.utils.NetworkStatusChecker;
 
@@ -39,7 +41,6 @@ public class PostListFragment extends Fragment {
     private SwipeRefreshLayout swipeRefreshLayout;
     private DataManager dataManager;
     private CoordinatorLayout coordinatorLayout;
-    private CompositeDisposable disposable;
 
 
     private List<PostModelRes> postModelResList;
@@ -55,13 +56,13 @@ public class PostListFragment extends Fragment {
         dataManager = DataManager.getInstance();
         postModelResList = new ArrayList<>();
         mAdapter = new PostAdapter(postModelResList);
-        disposable = new CompositeDisposable();
+
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        disposable.dispose();
+        dataManager.clearDisposable();
     }
 
     @Override
@@ -80,7 +81,18 @@ public class PostListFragment extends Fragment {
             LinearLayoutManager llm = new LinearLayoutManager(getContext());
             llm.setOrientation(LinearLayoutManager.VERTICAL);
 
-            RecyclerView recyclerView = view.findViewById(R.id.postRecyclerView);
+
+
+            final RecyclerView recyclerView = view.findViewById(R.id.postRecyclerView);
+
+            mAdapter.setListener(new OnAdapterItemClick() {
+                @Override
+                public void onItemClick(View view) {
+                    int position = recyclerView.getChildAdapterPosition(view);
+                    Toast.makeText(getContext(), String.valueOf(mAdapter.getItem(position).getId()) ,Toast.LENGTH_SHORT).show();
+                }
+            });
+
             recyclerView.setAdapter(mAdapter);
             recyclerView.setLayoutManager(llm);
 
@@ -133,7 +145,7 @@ public class PostListFragment extends Fragment {
                 }
             });*/
 
-            disposable.add(
+            dataManager.addDisposable(
                     dataManager.getPostsList().subscribeOn(Schedulers.io())
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribeWith(new DisposableObserver<List<PostModelRes>>() {
@@ -151,7 +163,6 @@ public class PostListFragment extends Fragment {
                                 @Override
                                 public void onComplete() {
                                     swipeRefreshLayout.setRefreshing(false);
-                                    disposable.delete(this);
                                 }
                             })
             );

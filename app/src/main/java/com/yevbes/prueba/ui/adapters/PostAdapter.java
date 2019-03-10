@@ -15,13 +15,19 @@ import java.util.List;
 
 public class PostAdapter extends RecyclerView.Adapter<PostViewHolder> {
 
+    private OnAdapterItemClick listener;
+
+    public void setListener(OnAdapterItemClick listener) {
+        this.listener = listener;
+    }
+
     private List<PostModelRes> list;
 
     public PostAdapter(List<PostModelRes> postModelResList) {
         list = postModelResList;
     }
 
-    public void addRowItems(List<PostModelRes> newElements){
+    public void addRowItems(List<PostModelRes> newElements) {
         list.addAll(newElements);
         notifyDataSetChanged();
     }
@@ -36,6 +42,10 @@ public class PostAdapter extends RecyclerView.Adapter<PostViewHolder> {
         notifyDataSetChanged();
     }
 
+    public PostModelRes getItem(int position) {
+        return list.get(position);
+    }
+
     @Override
     public PostViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
 
@@ -43,6 +53,18 @@ public class PostAdapter extends RecyclerView.Adapter<PostViewHolder> {
         LayoutInflater inflater = LayoutInflater.from(context);
 
         View view = inflater.inflate(R.layout.post_rv_item, viewGroup, false);
+
+        // Listener
+        view.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (listener != null) {
+                            listener.onItemClick(v);
+                        }
+                    }
+                }
+        );
 
         PostViewHolder viewHolder = new PostViewHolder(view);
         return viewHolder;
